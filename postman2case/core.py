@@ -34,49 +34,131 @@ class PostmanParser(object):
             headers[header["key"]] = header["value"]
         return headers
 
+    # def parse_each_item(self, item):
+    #     """ parse each item in postman to testcase in httprunner
+    #     """
+    #     api = {}
+    #     api["name"] = item["name"]
+    #     api["validate"] = []
+    #     api["variables"] = []
+
+    #     config = {}
+    #     config["name"] = item["name"]
+    #     config["variables"] = {}
+    #     config["verify"] = False
+
+    #     teststeps = []
+
+        
+    #     request = {}
+    #     request["method"] = item["request"]["method"]
+
+    #     url = self.parse_url(item["request"]["url"])
+
+    #     if request["method"] == "GET":
+    #         request["url"] = url.split("?")[0]
+    #         request["headers"] = self.parse_header(item["request"]["header"])
+
+    #         body = {}
+    #         if "query" in item["request"]["url"].keys():
+    #             for query in item["request"]["url"]["query"]:
+    #                 # api["variables"].append({query["key"]: parse_value_from_type(query["value"])})
+    #                 config["variables"][query["key"]] = parse_value_from_type(query["value"])
+    #                 body[query["key"]] = "$"+query["key"]
+    #         request["params"] = body
+    #         # request["request"] = body
+    #     else:
+    #         request["url"] = url
+    #         request["headers"] = self.parse_header(item["request"]["header"])
+
+    #         body = {}
+    #         try:
+    #             if item["request"]["body"] != {}:
+    #                 mode = item["request"]["body"]["mode"]
+    #                 if isinstance(item["request"]["body"][mode], list):
+    #                     for param in item["request"]["body"][mode]:
+    #                         if param["type"] == "text":
+    #                             config["variables"][query["key"]] = parse_value_from_type(query["value"])
+    #                             # api["variables"].append({param["key"]: parse_value_from_type(param["value"])})
+    #                         else:
+    #                             config["variables"][query["key"]] = parse_value_from_type(query["value"])
+    #                             # api["variables"].append({param["key"]: parse_value_from_type(param["src"])})
+    #                         body[param["key"]] = "$"+param["key"]
+    #                 elif isinstance(item["request"]["body"][mode], str):
+    #                     body = item["request"]["body"][mode]
+    #         except:
+    #             body = {}
+    #         request["data"] = body
+    #         # request["request"] = body
+    #     request["name"] = item["name"]
+    #     teststeps.append(request)
+    #     api["config"] = config
+    #     # api["request"] = request
+    #     api["teststeps"] = teststeps
+    #     return api
+
     def parse_each_item(self, item):
         """ parse each item in postman to testcase in httprunner
         """
         api = {}
         api["name"] = item["name"]
-        api["validate"] = []
         api["variables"] = []
 
+        config = {}
+        config["name"] = item["name"]
+        config["variables"] = {}
+        config["verify"] = False
+
+        teststeps = []
+
+        
         request = {}
-        request["method"] = item["request"]["method"]
+        request["validate"] = []
+        request["request"] = {}
+        request["request"]["method"] = item["request"]["method"]
 
         url = self.parse_url(item["request"]["url"])
 
-        if request["method"] == "GET":
-            request["url"] = url.split("?")[0]
-            request["headers"] = self.parse_header(item["request"]["header"])
+        if request["request"]["method"] == "GET":
+            request["request"]["url"] = url.split("?")[0]
+            request["request"]["headers"] = self.parse_header(item["request"]["header"])
 
             body = {}
             if "query" in item["request"]["url"].keys():
                 for query in item["request"]["url"]["query"]:
-                    api["variables"].append({query["key"]: parse_value_from_type(query["value"])})
+                    # api["variables"].append({query["key"]: parse_value_from_type(query["value"])})
+                    config["variables"][query["key"]] = parse_value_from_type(query["value"])
                     body[query["key"]] = "$"+query["key"]
-            request["params"] = body
+            request["request"]["params"] = body
+            # request["request"] = body
         else:
-            request["url"] = url
-            request["headers"] = self.parse_header(item["request"]["header"])
+            request["request"]["url"] = url
+            request["request"]["headers"] = self.parse_header(item["request"]["header"])
 
             body = {}
-            if item["request"]["body"] != {}:
-                mode = item["request"]["body"]["mode"]
-                if isinstance(item["request"]["body"][mode], list):
-                    for param in item["request"]["body"][mode]:
-                        if param["type"] == "text":
-                            api["variables"].append({param["key"]: parse_value_from_type(param["value"])})
-                        else:
-                            api["variables"].append({param["key"]: parse_value_from_type(param["src"])})
-                        body[param["key"]] = "$"+param["key"]
-                elif isinstance(item["request"]["body"][mode], str):
-                    
-                    body = item["request"]["body"][mode]
-            request["data"] = body
-
-        api["request"] = request
+            try:
+                if item["request"]["body"] != {}:
+                    mode = item["request"]["body"]["mode"]
+                    if isinstance(item["request"]["body"][mode], list):
+                        for param in item["request"]["body"][mode]:
+                            if param["type"] == "text":
+                                config["variables"][query["key"]] = parse_value_from_type(query["value"])
+                                # api["variables"].append({param["key"]: parse_value_from_type(param["value"])})
+                            else:
+                                config["variables"][query["key"]] = parse_value_from_type(query["value"])
+                                # api["variables"].append({param["key"]: parse_value_from_type(param["src"])})
+                            body[param["key"]] = "$"+param["key"]
+                    elif isinstance(item["request"]["body"][mode], str):
+                        body = item["request"]["body"][mode]
+            except:
+                body = {}
+            request["request"]["data"] = body
+            # request["request"] = body
+        request["name"] = item["name"]
+        teststeps.append(request)
+        api["config"] = config
+        # api["request"] = request
+        api["teststeps"] = teststeps
         return api
     
     def parse_items(self, items, folder_name=None):
@@ -109,8 +191,9 @@ class PostmanParser(object):
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         for each_api in data:
-            count += 1
-            file_name = str(count) + "." + output_file_type
+            # count += 1
+            # file_name = str(count) + "." + output_file_type
+            file_name = each_api["name"] + "." + output_file_type
             
             folder_name = each_api.pop("folder_name")
             if folder_name:
