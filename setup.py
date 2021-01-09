@@ -8,13 +8,13 @@ with io.open("README.md", encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='postman2case',
+    name='lishengyou@postman2case',
     version=__version__,
     description='Convert POSTMAN data to JSON testcases for HttpRunner.',
     long_description=long_description,
-    author='luguo',
-    author_email='hluguoj@163.com',
-    url='https://github.com/HttpRunner/postman2case',
+    author='lishengyou',
+    author_email='li_shengyou@163.com',
+    url='https://github.com/86542822/postman2case',
     license='MIT',
     packages=find_packages(exclude=['test.*', 'test']),
     package_data={},
